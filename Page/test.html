@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<title></title>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdn.bootcss.com/qs/6.7.0/qs.min.js"></script>
+	<script>
+		
+	</script>
+	<style>
+		.updateModal {
+			display: none;
+			z-index: 999;
+		}
+
+		.addModal {
+			display: none;
+			z-index: 999;
+		}
+	</style>
+</head>
+
+<body>
+	<table width="600" border="1" cellspacing="0">
+		<thead>
+			<tr>
+				<th>编号</th>
+				<th>EventName</th>
+				<th>CreatorId</th>
+				<th>操作</th>
+				<button onclick="addEvent()">ADD</button>
+			</tr>
+		</thead>
+		<tbody id="tbMain"></tbody>
+	</table>
+
+	<div class="updateModal" id="updateModal">
+		<form id="updateForm">
+			<input type="text" id="upName">
+			<input type="text" id="upCreator">
+			<button onclick="updateExecute()"></button>
+		</form>
+	</div>
+	<div class="addModal" id="addModal">
+		<form id="addForm">
+			EventName:<input type="text" id="addName">
+			CreatorId:<input type="text" id="addUser">
+			<button type="button" onclick="addExecute()">ADD</button>
+		</form>
+	</div>
+</body>
+
+<script>
+	window.onload = function () {
+		initEventsTable()
+	}
+
+	function initEventsTable() {
+		var tbody = document.getElementById('tbMain');
+		getAllEvents().then((res) => {
+			console.log(res);
+			console.log(tbody.childNodes.length);
+			// 判断是否有子节点
+			if (tbody.childNodes && tbody.childNodes.length != 0) {
+				// 删除子节点
+				tbody.removeChild(tbody.childNodes)
+			}
+			// 临时数组
+			let tempTbody = []
+			for (var i = 0; i < res.length; i++) { //遍历一下json数据
+				// 添加数据到数组
+				tempTbody.push(getDataRow(res[i], i + 1));
+			}
+			// 数组转支付串，join函数是拼接用的, 用innerHTML来直接设置，让浏览器帮你create Dom
+			tbody.innerHTML = tempTbody.join("")
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
+
+	async function getAllEvents() {
+		let result
+		await axios.get('https://localhost:44398/Events/GetAllEvents')
+			.then(function (response) {
+				result = response.data
+			})
+			.catch(function (error) {
+				console.log(error);
+			});
+		return result;
+	}
+
+	function getDataRow(h, index) {
+		let tempRow = `<tr>
+			<td class="id" value="${h.id}">${index}</td>
+			<td class="name">${h.eventName}</td>
+			<td class="job">${h.userId}</td>
+			<td class="oper">
+				<button onclick="deleteRow('${h.id}')">delete</button>
+				<button onclick="updateRow('${h}')">update</button>
+			</td>
+		</tr>`
+		return tempRow
+	}
+
+	//add start
+	function addEvent() {
+		openAdd()
+	}
+
+	function openAdd() {
+		let modalDom = document.getElementById("addModal")
+		modalDom.style.display = "block"
+	}
+
+	function addExecute() {
+		var qs= Qs
+		console.log("enter tests")
+		let modalDom = document.getElementById("addModal")
+		let EventName = document.getElementById("addName").value
+		let UserId = parseInt( document.getElementById("addUser").value)
+		let newEvent = {EventName,UserId}
+		console.log(newEvent.EventName+" sett " +newEvent.UserId)
+		axios.post("https://localhost:44398/Events/AddEvent",newEvent).then((response) => {
+			console.log(response.data);
+			// modalDom.style.display = "none"
+			// initEventsTable()
+		}).catch(function (error) {
+			console.log(error);
+		});
+	}
+
+	// update start
+	function updateRow(data) {
+		openModal(data);
+	}
+
+
+	function openModal(data) {
+		let modalDom = document.getElementById("updateModal")
+		modalDom.style.display = "block"
+		document.getElementById("upName").value = data.eventName
+		document.getElementById("upCreator").value = data.userId
+	}
+
+	function updateExecute() {
+		let modalDom = document.getElementById("updateModal")
+		let childNodes = modalDom.childNodes
+		let form = document.getElementById("updateForm")
+		axios.post().then(() => {
+			modalDom.style.display = "none"
+			initEventsTable()
+		})
+	}
+	// update end
+
+	function deleteRow(id) {
+		console.log(id)
+		if (confirm("确定删除这一行嘛？")) {
+			axios.get('https://localhost:44398/Events/DeleteEvent', {
+				params: {
+					id: id
+				}
+			})
+				.then(function (response) {
+					console.log("deleteRes", response)
+					if (response.data.status === 1) {
+						this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
+						console.log("test", response)
+					} else {
+						alert("Fail")
+					}
+				})
+				.catch(function (error) {
+					console.log(error);
+				});
+		}
+	}
+</script>
+
+</html>
