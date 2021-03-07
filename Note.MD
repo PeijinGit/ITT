@@ -1,57 +1,50 @@
-﻿using Microsoft.Extensions.Options;
-using Models;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-
-
-namespace DAL
-{
-    public class Event : BaseDAL, IEventDAL
-    {
-
-        public Event(IOptions<AppSettingModels> appSettings) : base(appSettings)
+```c#
+public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(ac => ac.AddPolicy("any", ap => ap.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+            services.AddControllers();
         }
+```
 
-        public int DeleteEvent(string id)
+```c#
+app.UseRouting();
+app.UseCors();
+app.UseAuthorization();
+```
+
+```c#
+[ApiController]
+[EnableCors("any")]
+[Route("[controller]/[action]")]
+public class EventController : ControllerBase
+```
+
+```c#
+public IEnumerable<Models.Event> ListEvents()
         {
             var events = new List<Models.Event>();
+
             using (var connection = new SqlConnection(connectionString))
             {
-                using (var command = new SqlCommand("DeleteEvent", connection) { CommandType = System.Data.CommandType.StoredProcedure })
+                using (var command = new SqlCommand("ListEvents", connection) { CommandType = System.Data.CommandType.StoredProcedure })
                 {
                     connection.Open();
-                    command.Parameters.Add(new SqlParameter("@id", id));
+
                     using (var reader = command.ExecuteReader())
                     {
-                        int count = 0;
-                        while (reader.Read()) 
+                        while (reader.Read())
                         {
-                            count= (int)reader["rowNum"];
-                        }
-                        if (count == 0)
-                        {
-                            return -1;
-                        }
-                        else
-                        {
-                            return 1;
+                            events.Add(new Models.Event { Id = (string)reader["Id"], EventName = (string)reader["EventName"], UserId = (int)reader["CreatorId"] });
                         }
                     }
                 }
             }
+            return events;
         }
+```
 
-
-        /// <summary>
-        /// Add event function
-        /// Insert single event with eventId CreatorId and eventName 
-        /// </summary>
-        /// <param name="creatorId"></param>
-        /// <param name="eventName"></param>
-        /// <returns></returns>
-        public Models.Event AddEvent(int creatorId, string eventName)
+```c#
+public Models.Event AddEvent(int creatorId, string eventName)
         {
             var events = new List<Models.Event>();
             using (var connection = new SqlConnection(connectionString))
@@ -71,21 +64,16 @@ namespace DAL
                         }
                         else
                         {
-                            return new Models.Event {Id = id,EventName = eventName };
+                            return new Models.Event { Id = id, EventName = eventName };
                         }
                     }
                 }
             }
         }
+```
 
-        /// <summary>
-        /// Update event function
-        /// Update event with eventId and new eventName 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="eventName"></param>
-        /// <returns></returns>
-        public Models.Event UpdateEvent(string id, string eventName)
+```c#
+public Models.Event UpdateEvent(string id, string eventName)
         {
             var events = new List<Models.Event>();
             using (var connection = new SqlConnection(connectionString))
@@ -109,48 +97,38 @@ namespace DAL
                 }
             }
         }
+```
 
-        public IEnumerable<Models.Event> ListEvents()
-        {
-            var events = new List<Models.Event>();
-
-            using (var connection = new SqlConnection(connectionString))
-            {
-                using (var command = new SqlCommand("ListEvents", connection) { CommandType = System.Data.CommandType.StoredProcedure })
-                {
-                    connection.Open();
-
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            events.Add(new Models.Event { Id = (string)reader["Id"], EventName = (string)reader["EventName"], UserId = (int)reader["CreatorId"] });
-                        }
-                    }
-                }
-            }
-            return events;
-        }
-
-        public IEnumerable<Models.Event> ListEventsById(int id)
+```c#
+public int DeleteEvent(string id)
         {
             var events = new List<Models.Event>();
             using (var connection = new SqlConnection(connectionString))
             {
-                using (var command = new SqlCommand("ShowEventByUser", connection) { CommandType = System.Data.CommandType.StoredProcedure })
+                using (var command = new SqlCommand("DeleteEvent", connection) { CommandType = System.Data.CommandType.StoredProcedure })
                 {
                     connection.Open();
                     command.Parameters.Add(new SqlParameter("@id", id));
                     using (var reader = command.ExecuteReader())
                     {
+                        int count = 0;
                         while (reader.Read())
                         {
-                            events.Add(new Models.Event { Id = (string)reader["Id"], EventName = (string)reader["EventName"] });
+                            count = (int)reader["rowNum"];
+                        }
+                        if (count == 0)
+                        {
+                            return -1;
+                        }
+                        else
+                        {
+                            return 1;
                         }
                     }
                 }
             }
-            return events;
         }
-    }
-}
+```
+
+
+
