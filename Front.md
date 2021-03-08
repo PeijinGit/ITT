@@ -79,7 +79,7 @@
             <td>${value.eventName}</td>
             <td>${value.userId}</td>
             <td>
-                <button onclick="openUpdate('${value.eventName, value.userId}')">Update</button>
+                <button onclick="openUpdate('${value.eventName}','${ value.userId}')">Update</button>
                 <button onclick="deleteEvent('${ value.id }')">Delete</button>
             </td>
         </tr >`
