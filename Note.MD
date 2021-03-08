@@ -130,5 +130,7 @@ public int DeleteEvent(string id)
         }
 ```
 
+connect Format
 
+Data Source=42.192.76.32;Initial Catalog=IShareData;User ID=SA;Password=***;
 

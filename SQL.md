@@ -35,6 +35,23 @@ DELETE FROM Events
 WHERE Events.Id = @id
 SELECT @@ROWCOUNT AS rowNum
 
+ALTER PROC DeleteEvent
+@id varchar(30)
+AS
+Begin Transaction
+BEGIN TRY
+	DELETE FROM EventEnroll WHERE EventEnroll.EventId = @id
+	DELETE FROM Events WHERE Events.Id = @id
+	SELECT @@rowcount AS rowNum
+END TRY
+BEGIN CATCH
+     ROLLBACK Transaction
+END CATCH
+IF(@@TRANCOUNT>0)
+BEGIN
+     COMMIT Transaction
+END
+
 添加事件并开启事务更新Enroll表
 
 CREATE PROC AddEvents
